@@ -1,27 +1,27 @@
 ﻿namespace Pathfinder.GraphTheory
 {
-	internal class DijkstraData
-	{
-		#region Properties
+    internal class DijkstraData
+    {
+        #region Properties
 
-		public Edge PreviousEdge
-		{
-			get;
-			set;
-		}
+        public Edge PreviousEdge
+        {
+            get;
+            set;
+        }
 
-		public Node PreviousNode
-		{
-			get;
-			set;
-		}
+        public Node PreviousNode
+        {
+            get;
+            set;
+        }
 
-		public int Price
-		{
-			get;
-			set;
-		}
+        public int Price
+        {
+            get;
+            set;
+        }
 
-		#endregion
-	}
+        #endregion
+    }
 }

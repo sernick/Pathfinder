@@ -1,29 +1,29 @@
 ﻿namespace Pathfinder
 {
-	internal class Vertex
-	{
-		#region Constructors
+    internal class Vertex
+    {
+        #region Constructors
 
-		public Vertex(int x, int y)
-		{
-			X = x;
-			Y = y;
-		}
+        public Vertex(int x, int y)
+        {
+            X = x;
+            Y = y;
+        }
 
-		#endregion
+        #endregion
 
-		#region Properties
+        #region Properties
 
-		public int X
-		{
-			get;
-		}
+        public int X
+        {
+            get;
+        }
 
-		public int Y
-		{
-			get;
-		}
+        public int Y
+        {
+            get;
+        }
 
-		#endregion
-	}
+        #endregion
+    }
 }
