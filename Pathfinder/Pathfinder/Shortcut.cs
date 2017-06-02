@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 
+using Pathfinder.Analysis;
 using Pathfinder.GraphTheory;
+using Pathfinder.Reading;
 
 
 namespace Pathfinder
@@ -77,72 +79,68 @@ namespace Pathfinder
 
         private static List<List<Vertex>> CorrectOutlines(List<List<Vertex>> outlines, Vertex start, Vertex end)
         {
-            int xMin, xMax;
+            int xmin, xmax;
             if (start.X < end.X)
             {
-                xMin = start.X;
-                xMax = end.X;
+                xmin = start.X;
+                xmax = end.X;
             }
             else
             {
-                xMin = end.X;
-                xMax = start.X;
+                xmin = end.X;
+                xmax = start.X;
             }
 
-            int yMin, yMax;
+            int ymin, ymax;
             if (start.Y < end.Y)
             {
-                yMin = start.Y;
-                yMax = end.Y;
+                ymin = start.Y;
+                ymax = end.Y;
             }
             else
             {
-                yMin = end.Y;
-                yMax = start.Y;
+                ymin = end.Y;
+                ymax = start.Y;
             }
 
-            List<List<Vertex>> selectedOutlines = SelectOutlines(outlines, xMin, yMin, xMax, yMax);
+            List<List<Vertex>> selectedOutlines = SelectOutlines(outlines, xmin, ymin, xmax, ymax);
 
             foreach (List<Vertex> outline in selectedOutlines)
             {
                 foreach (Vertex vertex in outline)
                 {
                     int x = vertex.X;
-                    if (x < xMin)
+                    if (x < xmin)
                     {
-                        xMin = x;
+                        xmin = x;
                     }
-                    else if (x > xMax)
+                    else if (x > xmax)
                     {
-                        xMax = x;
+                        xmax = x;
                     }
 
                     int y = vertex.Y;
-                    if (y < yMin)
+                    if (y < ymin)
                     {
-                        yMin = y;
+                        ymin = y;
                     }
-                    else if (y > yMax)
+                    else if (y > ymax)
                     {
-                        yMax = y;
+                        ymax = y;
                     }
                 }
             }
 
-            return SelectOutlines(outlines, xMin, yMin, xMax, yMax);
+            return SelectOutlines(outlines, xmin, ymin, xmax, ymax);
         }
 
-        private static void DivideSegments(List<int[]> segments)
+        private static void DivideSegments(List<Segment> segments)
         {
             for (int i = 0; i < segments.Count; i++)
             {
-                int[] a = segments[i];
-                int ya = a[0];
+                Segment a = segments[i];
 
-                int amin = a[1];
-                int amax = a[2];
-
-                if (amin == amax)
+                if (a.Min == a.Max)
                 {
                     segments.RemoveAt(i);
                     i--;
@@ -151,82 +149,78 @@ namespace Pathfinder
 
                 for (int j = i + 1; j < segments.Count; j++)
                 {
-                    int[] b = segments[j];
-                    int yb = b[0];
+                    var b = segments[j];
 
-                    if (ya == yb)
+                    if (a.Level == b.Level)
                     {
-                        int bmin = b[1];
-                        int bmax = b[2];
-
-                        if (bmin <= amax && bmax >= amin)
+                        if (b.Min <= a.Max && b.Max >= a.Min)
                         {
-                            if (bmin == amin)
+                            if (b.Min == a.Min)
                             {
-                                if (bmax == amin)
+                                if (b.Max == a.Min)
                                 {
                                     segments.RemoveAt(j);
                                     j--;
                                 }
-                                if (bmax == amax)
+                                if (b.Max == a.Max)
                                 {
                                     segments.RemoveAt(j);
                                     j--;
                                 }
-                                else if (bmax > amax)
+                                else if (b.Max > a.Max)
                                 {
-                                    b[1] = amax;
+                                    b.Min = a.Max;
                                 }
                                 else
                                 {
-                                    amin = a[1] = bmax;
+                                    a.Min = b.Max;
                                 }
                             }
-                            else if (bmin == amax)
+                            else if (b.Min == a.Max)
                             {
-                                if (bmax == amax)
+                                if (b.Max == a.Max)
                                 {
                                     segments.RemoveAt(j);
                                     j--;
                                 }
                             }
-                            else if (bmin < amin)
+                            else if (b.Min < a.Min)
                             {
-                                if (bmax == amin)
+                                if (b.Max == a.Min)
                                 {
                                 }
-                                else if (bmax == amax)
+                                else if (b.Max == a.Max)
                                 {
-                                    b[2] = amin;
+                                    b.Max = a.Min;
                                 }
-                                else if (bmax > amax)
+                                else if (b.Max > a.Max)
                                 {
-                                    segments.Add(new[] {ya, amax, bmax});
-                                    b[2] = amin;
+                                    segments.Add(new Segment(a.Level, a.Max, b.Max));
+                                    b.Max = a.Min;
                                 }
-                                else if (bmax < amax)
+                                else if (b.Max < a.Max)
                                 {
-                                    segments.Add(new[] {ya, bmax, amax});
-                                    b[2] = amin;
-                                    amax = a[2] = bmax;
+                                    segments.Add(new Segment (a.Level, b.Max, a.Max));
+                                    b.Max = a.Min;
+                                    a.Max = b.Max;
                                 }
                             }
-                            else if (bmin > amin)
+                            else if (b.Min > a.Min)
                             {
-                                if (bmax == amax)
+                                if (b.Max == a.Max)
                                 {
-                                    amax = a[2] = bmin;
+                                    a.Max = b.Min;
                                 }
-                                else if (bmax > amax)
+                                else if (b.Max > a.Max)
                                 {
-                                    segments.Add(new[] {ya, amax, bmax});
-                                    b[2] = amax;
-                                    amax = a[2] = bmin;
+                                    segments.Add(new Segment(a.Level, a.Max, b.Max));
+                                    b.Max = a.Max;
+                                    a.Max = b.Min;
                                 }
                                 else
                                 {
-                                    segments.Add(new[] {ya, bmax, amax});
-                                    amax = a[2] = bmin;
+                                    segments.Add(new Segment(a.Level, b.Max, a.Max));
+                                    a.Max = b.Min;
                                 }
                             }
                         }
@@ -235,45 +229,91 @@ namespace Pathfinder
             }
         }
 
+        private static void DoubleToInt(List<Area> areas,
+                                        List<Section> horizontalSections,
+                                        List<Section> verticalSections,
+                                        List<Point[]> shelfs,
+                                        int offset,
+                                        out List<Rectangle> rectangles,
+                                        out List<Corridor> horizontalCorridors,
+                                        out List<Corridor> verticalCorridors,
+                                        out List<List<Vertex>> gaps)
+        {
+            rectangles = new List<Rectangle>(areas.Count);
+            foreach (Area area in areas)
+            {
+                rectangles.Add(new Rectangle(area, offset));
+            }
+
+            gaps = new List<List<Vertex>>();
+            foreach (Point[] points in shelfs)
+            {
+                if (points.Length > 0)
+                {
+                    var gap = new List<Vertex>(points.Length);
+                    foreach (Point point in points)
+                    {
+                        int x = (int) Math.Round(point.X);
+                        int y = (int) Math.Round(point.Y);
+
+                        gap.Add(new Vertex(x, y));
+                    }
+                    gaps.Add(gap);
+                }
+            }
+
+            horizontalCorridors = new List<Corridor>(horizontalSections.Count);
+            foreach (Section section in horizontalSections)
+            {
+                horizontalCorridors.Add(Corridor.GetHorizontalCorridor(section, offset));
+            }
+
+            verticalCorridors = new List<Corridor>(verticalSections.Count);
+            foreach (Section section in verticalSections)
+            {
+                verticalCorridors.Add(Corridor.GetVerticalCorridor(section, offset));
+            }
+        }
+
         private static void GetCoordinatesAndCorrectCorridors(Vertex start,
                                                               Vertex end,
                                                               List<List<Vertex>> outlines,
-                                                              List<int[]> horizontalCorridors,
-                                                              List<int[]> verticalCorridors,
+                                                              List<Corridor> horizontalCorridors,
+                                                              List<Corridor> verticalCorridors,
                                                               List<Vertex[]> gaps,
                                                               out HashSet<int> xs,
                                                               out HashSet<int> ys)
         {
-            int xMin, xMax;
+            int xmin, xmax;
             if (start.X < end.X)
             {
-                xMin = start.X;
-                xMax = end.X;
+                xmin = start.X;
+                xmax = end.X;
             }
             else
             {
-                xMin = end.X;
-                xMax = start.X;
+                xmin = end.X;
+                xmax = start.X;
             }
 
-            int yMin, yMax;
+            int ymin, ymax;
             if (start.Y < end.Y)
             {
-                yMin = start.Y;
-                yMax = end.Y;
+                ymin = start.Y;
+                ymax = end.Y;
             }
             else
             {
-                yMin = end.Y;
-                yMax = start.Y;
+                ymin = end.Y;
+                ymax = start.Y;
             }
 
             xs = new HashSet<int>(new[] {start.X, end.X});
             ys = new HashSet<int>(new[] {start.Y, end.Y});
 
-            foreach (Vertex[] vertices in gaps)
+            foreach (Vertex[] gap in gaps)
             {
-                foreach (Vertex vertex in vertices)
+                foreach (Vertex vertex in gap)
                 {
                     xs.Add(vertex.X);
                     ys.Add(vertex.Y);
@@ -290,44 +330,44 @@ namespace Pathfinder
                     xs.Add(x);
                     ys.Add(y);
 
-                    if (x < xMin)
+                    if (x < xmin)
                     {
-                        xMin = x;
+                        xmin = x;
                     }
-                    else if (x > xMax)
+                    else if (x > xmax)
                     {
-                        xMax = x;
+                        xmax = x;
                     }
 
-                    if (y < yMin)
+                    if (y < ymin)
                     {
-                        yMin = y;
+                        ymin = y;
                     }
-                    else if (y > yMax)
+                    else if (y > ymax)
                     {
-                        yMax = y;
+                        ymax = y;
                     }
                 }
             }
 
             for (int i = 0; i < horizontalCorridors.Count; i++)
             {
-                int[] corridor = horizontalCorridors[i];
+                Corridor corridor = horizontalCorridors[i];
 
-                int y1 = corridor[0];
-                int y2 = corridor[1];
+                int y1 = corridor.Ymin;
+                int y2 = corridor.Ymax;
 
-                int x1 = corridor[2];
-                int x2 = corridor[3];
+                int x1 = corridor.Xmin;
+                int x2 = corridor.Xmax;
 
-                if (y1 > yMin && y1 < yMax || y2 > yMin && y2 < yMax)
+                if (y1 > ymin && y1 < ymax || y2 > ymin && y2 < ymax)
                 {
                     byte b1;
-                    if (x1 < xMin)
+                    if (x1 < xmin)
                     {
                         b1 = 1;
                     }
-                    else if (x1 > xMax)
+                    else if (x1 > xmax)
                     {
                         b1 = 2;
                     }
@@ -337,11 +377,11 @@ namespace Pathfinder
                     }
 
                     byte b2;
-                    if (x2 < xMin)
+                    if (x2 < xmin)
                     {
                         b2 = 1;
                     }
-                    else if (x2 > xMax)
+                    else if (x2 > xmax)
                     {
                         b2 = 2;
                     }
@@ -357,7 +397,7 @@ namespace Pathfinder
 
                         if (b1 == 1)
                         {
-                            corridor[2] = xMin;
+                            corridor.Xmin = xmin;
                         }
                         else
                         {
@@ -366,7 +406,7 @@ namespace Pathfinder
 
                         if (b2 == 2)
                         {
-                            corridor[3] = xMax;
+                            corridor.Xmax = xmax;
                         }
                         else
                         {
@@ -388,22 +428,22 @@ namespace Pathfinder
 
             for (int i = 0; i < verticalCorridors.Count; i++)
             {
-                int[] corridor = verticalCorridors[i];
+                Corridor corridor = verticalCorridors[i];
 
-                int x1 = corridor[0];
-                int x2 = corridor[1];
+                int x1 = corridor.Xmin;
+                int x2 = corridor.Xmax;
 
-                int y1 = corridor[2];
-                int y2 = corridor[3];
+                int y1 = corridor.Ymin;
+                int y2 = corridor.Ymax;
 
-                if (x1 > xMin && x1 < xMax || x2 > xMin && x2 < xMax)
+                if (x1 > xmin && x1 < xmax || x2 > xmin && x2 < xmax)
                 {
                     byte b1;
-                    if (y1 < yMin)
+                    if (y1 < ymin)
                     {
                         b1 = 1;
                     }
-                    else if (y1 > yMax)
+                    else if (y1 > ymax)
                     {
                         b1 = 2;
                     }
@@ -413,11 +453,11 @@ namespace Pathfinder
                     }
 
                     byte b2;
-                    if (y2 < yMin)
+                    if (y2 < ymin)
                     {
                         b2 = 1;
                     }
-                    else if (y2 > yMax)
+                    else if (y2 > ymax)
                     {
                         b2 = 2;
                     }
@@ -433,7 +473,7 @@ namespace Pathfinder
 
                         if (b1 == 1)
                         {
-                            corridor[2] = yMin;
+                            corridor.Ymin = ymin;
                         }
                         else
                         {
@@ -442,7 +482,7 @@ namespace Pathfinder
 
                         if (b2 == 2)
                         {
-                            corridor[3] = yMax;
+                            corridor.Ymax = ymax;
                         }
                         else
                         {
@@ -463,72 +503,30 @@ namespace Pathfinder
             }
         }
 
-        private static void GetCorridors(List<double[]> horizontalSections,
-                                         List<double[]> verticalSections,
-                                         int offset,
-                                         out List<int[]> horizontalCorridors,
-                                         out List<int[]> verticalCorridors)
+        private static List<List<Vertex>> GetOutlines(List<Rectangle> rectangles)
         {
-            horizontalCorridors = new List<int[]>();
-            verticalCorridors = new List<int[]>();
+            var horizontalSegments = new List<Segment>();
+            var verticalSegments = new List<Segment>();
 
-            foreach (double[] section in horizontalSections)
+            foreach (Rectangle rectangle in rectangles)
             {
-                double y = section[0];
-                double xMin = section[1];
-                double xMax = section[2];
+                int x1 = rectangle.Xmin;
+                int y1 = rectangle.Ymin;
+                int x2 = rectangle.Xmax;
+                int y2 = rectangle.Ymax;
 
-                var corridor = new[]
-                               {
-                                   (int) Math.Floor(y) - offset,
-                                   (int) Math.Ceiling(y) + offset,
-                                   (int) Math.Floor(xMin) - offset,
-                                   (int) Math.Ceiling(xMax) + offset
-                               };
-                horizontalCorridors.Add(corridor);
+                horizontalSegments.Add(new Segment(y1, x1, x2));
+                horizontalSegments.Add(new Segment(y2, x1, x2));
+
+                verticalSegments.Add(new Segment(x1, y1, y2));
+                verticalSegments.Add(new Segment(x2, y1, y2));
             }
 
-            foreach (double[] section in verticalSections)
-            {
-                double x = section[0];
-                double yMin = section[1];
-                double yMax = section[2];
-
-                var corridor = new[]
-                               {
-                                   (int) Math.Floor(x) - offset,
-                                   (int) Math.Ceiling(x) + offset,
-                                   (int) Math.Floor(yMin) - offset,
-                                   (int) Math.Ceiling(yMax) + offset
-                               };
-                verticalCorridors.Add(corridor);
-            }
-        }
-
-        private static List<List<Vertex>> GetOutlines(List<int[]> rectangles)
-        {
-            var hs = new List<int[]>();
-            var vs = new List<int[]>();
-
-            foreach (int[] rectangle in rectangles)
-            {
-                int x1 = rectangle[0];
-                int y1 = rectangle[1];
-                int x2 = rectangle[2];
-                int y2 = rectangle[3];
-
-                hs.Add(new[] {y1, x1, x2});
-                hs.Add(new[] {y2, x1, x2});
-
-                vs.Add(new[] {x1, y1, y2});
-                vs.Add(new[] {x2, y1, y2});
-            }
-
-            DivideSegments(hs);
-            DivideSegments(vs);
+            DivideSegments(horizontalSegments);
+            DivideSegments(verticalSegments);
 
             var verticals = new Dictionary<int, List<int[]>>();
-            foreach (int[] segment in vs)
+            foreach (int[] segment in verticalSegments)
             {
                 int key = segment[0];
                 if (verticals.ContainsKey(key))
@@ -541,15 +539,15 @@ namespace Pathfinder
                 }
             }
 
-            for (int i = 0; i < hs.Count; i++)
+            for (int i = 0; i < horizontalSegments.Count; i++)
             {
-                int[] horizontal = hs[i];
+                int[] horizontal = horizontalSegments[i];
 
                 int y = horizontal[0];
-                int xMin = horizontal[1];
-                int xMax = horizontal[2];
+                int xmin = horizontal[1];
+                int xmax = horizontal[2];
 
-                foreach (int x in new[] {xMin, xMax})
+                foreach (int x in new[] {xmin, xmax})
                 {
                     if (verticals.ContainsKey(x))
                     {
@@ -558,19 +556,19 @@ namespace Pathfinder
                         {
                             int[] vertical = segments[j];
 
-                            int yMin = vertical[1];
-                            int yMax = vertical[2];
+                            int ymin = vertical[1];
+                            int ymax = vertical[2];
 
-                            if (y > yMin && y < yMax)
+                            if (y > ymin && y < ymax)
                             {
-                                segments.Add(new[] {x, y, yMax});
+                                segments.Add(new[] {x, y, ymax});
                                 vertical[2] = y;
                             }
                         }
                     }
                 }
 
-                for (int x = xMin + 1; x < xMax; x++)
+                for (int x = xmin + 1; x < xmax; x++)
                 {
                     if (verticals.ContainsKey(x))
                     {
@@ -579,22 +577,22 @@ namespace Pathfinder
                         {
                             int[] vertical = segments[j];
 
-                            int yMin = vertical[1];
-                            int yMax = vertical[2];
+                            int ymin = vertical[1];
+                            int ymax = vertical[2];
 
-                            if (y == yMin || y == yMax)
+                            if (y == ymin || y == ymax)
                             {
-                                hs.Add(new[] {y, x, xMax});
-                                xMax = horizontal[2] = x;
+                                horizontalSegments.Add(new[] {y, x, xmax});
+                                xmax = horizontal[2] = x;
                                 break;
                             }
-                            if (y > yMin && y < yMax)
+                            if (y > ymin && y < ymax)
                             {
-                                segments.Add(new[] {x, y, yMax});
+                                segments.Add(new[] {x, y, ymax});
                                 vertical[2] = y;
 
-                                hs.Add(new[] {y, x, xMax});
-                                xMax = horizontal[2] = x;
+                                horizontalSegments.Add(new[] {y, x, xmax});
+                                xmax = horizontal[2] = x;
                                 break;
                             }
                         }
@@ -603,7 +601,7 @@ namespace Pathfinder
             }
 
             var horizontals = new Dictionary<int, List<int[]>>();
-            foreach (int[] segment in hs)
+            foreach (int[] segment in horizontalSegments)
             {
                 int key = segment[0];
                 if (horizontals.ContainsKey(key))
@@ -700,47 +698,47 @@ namespace Pathfinder
 
                 foreach (int[] segment in segments)
                 {
-                    int yMin = segment[1];
-                    int yMax = segment[2];
+                    int ymin = segment[1];
+                    int ymax = segment[2];
 
                     Vertex minVertex;
-                    if (vertices.ContainsKey(yMin))
+                    if (vertices.ContainsKey(ymin))
                     {
-                        Dictionary<int, Vertex> xs = vertices[yMin];
+                        Dictionary<int, Vertex> xs = vertices[ymin];
                         if (xs.ContainsKey(x))
                         {
-                            minVertex = vertices[yMin][x];
+                            minVertex = vertices[ymin][x];
                         }
                         else
                         {
-                            minVertex = new Vertex(x, yMin);
+                            minVertex = new Vertex(x, ymin);
                             xs[x] = minVertex;
                         }
                     }
                     else
                     {
-                        minVertex = new Vertex(x, yMin);
-                        vertices[yMin] = new Dictionary<int, Vertex> {{x, minVertex}};
+                        minVertex = new Vertex(x, ymin);
+                        vertices[ymin] = new Dictionary<int, Vertex> {{x, minVertex}};
                     }
 
                     Vertex maxVertex;
-                    if (vertices.ContainsKey(yMax))
+                    if (vertices.ContainsKey(ymax))
                     {
-                        Dictionary<int, Vertex> xs = vertices[yMax];
+                        Dictionary<int, Vertex> xs = vertices[ymax];
                         if (xs.ContainsKey(x))
                         {
-                            maxVertex = vertices[yMax][x];
+                            maxVertex = vertices[ymax][x];
                         }
                         else
                         {
-                            maxVertex = new Vertex(x, yMax);
+                            maxVertex = new Vertex(x, ymax);
                             xs[x] = maxVertex;
                         }
                     }
                     else
                     {
-                        maxVertex = new Vertex(x, yMax);
-                        vertices[yMax] = new Dictionary<int, Vertex> {{x, maxVertex}};
+                        maxVertex = new Vertex(x, ymax);
+                        vertices[ymax] = new Dictionary<int, Vertex> {{x, maxVertex}};
                     }
 
                     if (rays.ContainsKey(minVertex))
@@ -841,9 +839,9 @@ namespace Pathfinder
             return outlines;
         }
 
-        public static List<Point> GetPath(List<double[]> areas,
-                                          List<double[]> horizontalSections,
-                                          List<double[]> verticalSections,
+        public static List<Point> GetPath(List<Area> areas,
+                                          List<Section> horizontalSections,
+                                          List<Section> verticalSections,
                                           List<Point[]> shelfs,
                                           int offset,
                                           int intersectionWeight,
@@ -861,50 +859,21 @@ namespace Pathfinder
             var start = new Vertex(xStart, yStart);
             var end = new Vertex(xEnd, yEnd);
 
-            var rectangles = new List<int[]>(areas.Count);
-            foreach (double[] area in areas)
-            {
-                var rectangle = new[]
-                                {
-                                    (int) Math.Floor(area[0]) - offset,
-                                    (int) Math.Floor(area[1]) - offset,
-                                    (int) Math.Ceiling(area[2]) + offset,
-                                    (int) Math.Ceiling(area[3]) + offset
-                                };
-                rectangles.Add(rectangle);
-            }
+            DoubleToInt(areas,
+                        horizontalSections,
+                        verticalSections,
+                        shelfs,
+                        offset,
+                        out List<Rectangle> rectangles,
+                        out List<Corridor> horizontalCorridors,
+                        out List<Corridor> verticalCorridors,
+                        out List<List<Vertex>> gaps);
 
             List<List<Vertex>> outlines = GetOutlines(rectangles);
             if (optimize)
             {
                 outlines = CorrectOutlines(outlines, start, end);
             }
-
-            var gaps = new List<Vertex[]>();
-            foreach (Point[] points in shelfs)
-            {
-                if (points.Length < 0)
-                {
-                    continue;
-                }
-
-                var vetices = new Vertex[points.Length];
-                for (int i = 0; i < points.Length; i++)
-                {
-                    Point point = points[i];
-                    int x = (int) Math.Round(point.X);
-                    int y = (int) Math.Round(point.Y);
-
-                    vetices[i] = new Vertex(x, y);
-                }
-                gaps.Add(vetices);
-            }
-
-            GetCorridors(horizontalSections,
-                         verticalSections,
-                         offset,
-                         out List<int[]> horizontalCorridors,
-                         out List<int[]> verticalCorridors);
 
             GetCoordinatesAndCorrectCorridors(start,
                                               end,
@@ -915,8 +884,14 @@ namespace Pathfinder
                                               out HashSet<int> xs,
                                               out HashSet<int> ys);
 
-            var horizontalSides = new Dictionary<int, List<int[]>>();
-            var verticalSides = new Dictionary<int, List<int[]>>();
+            List<int> abscissas = xs.ToList();
+            abscissas.Sort();
+
+            List<int> ordinates = ys.ToList();
+            ordinates.Sort();
+
+            var horizontalSides = new Dictionary<int, List<Side>>();
+            var verticalSides = new Dictionary<int, List<Side>>();
 
             foreach (List<Vertex> outline in outlines)
             {
@@ -929,71 +904,65 @@ namespace Pathfinder
                 {
                     int j = i + 1;
 
-                    Vertex p1 = outline[i];
-                    Vertex p2 = outline[j];
+                    Vertex v1 = outline[i];
+                    Vertex v2 = outline[j];
 
-                    if (p1.X == p2.X)
+                    if (v1.X == v2.X)
                     {
-                        int[] side;
-                        if (p1.Y < p2.Y)
+                        Side side;
+                        if (v1.Y < v2.Y)
                         {
-                            side = new[] {p1.Y, p2.Y, 1};
+                            side = new Side(v1.Y, v2.Y, 1);
                         }
                         else
                         {
-                            side = new[] {p2.Y, p1.Y, -1};
+                            side = new Side(v2.Y, v1.Y, -1);
                         }
 
-                        int x = p1.X;
+                        int x = v1.X;
                         if (verticalSides.ContainsKey(x))
                         {
                             verticalSides[x].Add(side);
                         }
                         else
                         {
-                            verticalSides[x] = new List<int[]> {side};
+                            verticalSides[x] = new List<Side> {side};
                         }
                     }
                     else
                     {
-                        int[] side;
-                        if (p1.X < p2.X)
+                        Side side;
+                        if (v1.X < v2.X)
                         {
-                            side = new[] {p1.X, p2.X, 1};
+                            side = new Side(v1.X, v2.X, 1);
                         }
                         else
                         {
-                            side = new[] {p2.X, p1.X, -1};
+                            side = new Side(v2.X, v1.X, -1);
                         }
 
-                        int y = p1.Y;
+                        int y = v1.Y;
                         if (horizontalSides.ContainsKey(y))
                         {
                             horizontalSides[y].Add(side);
                         }
                         else
                         {
-                            horizontalSides[y] = new List<int[]> {side};
+                            horizontalSides[y] = new List<Side> {side};
                         }
                     }
                 }
             }
 
-            foreach (List<int[]> sides in horizontalSides.Values)
+            foreach (List<Side> sides in horizontalSides.Values)
             {
-                sides.Sort((a, b) => a[0].CompareTo(b[0]));
+                sides.Sort((a, b) => a.Cmin.CompareTo(b.Cmin));
             }
 
-            foreach (List<int[]> sides in verticalSides.Values)
+            foreach (List<Side> sides in verticalSides.Values)
             {
-                sides.Sort((a, b) => a[0].CompareTo(b[0]));
+                sides.Sort((a, b) => a.Cmin.CompareTo(b.Cmin));
             }
-
-            List<int> abscissas = xs.ToList();
-            abscissas.Sort();
-
-            List<int> ordinates = ys.ToList();
-            ordinates.Sort();
 
             var horizontalEdges = new byte[ordinates.Count, abscissas.Count - 1];
             for (int i = 0; i < ordinates.Count; i++)
@@ -1009,18 +978,14 @@ namespace Pathfinder
 
                     if (verticalSides.ContainsKey(x))
                     {
-                        foreach (int[] side in verticalSides[x])
+                        foreach (Side side in verticalSides[x])
                         {
-                            int yMin = side[0];
-                            int yMax = side[1];
-
-                            if (y >= yMin && y < yMax || y > yMin && y <= yMax)
+                            if (y >= side.Cmin && y < side.Cmax || y > side.Cmin && y <= side.Cmax)
                             {
-                                int direction = side[2];
-                                if (direction != previousDirection)
+                                if (side.Direction != previousDirection)
                                 {
-                                    previousDirection = direction;
-                                    crossing += direction;
+                                    previousDirection = side.Direction;
+                                    crossing += side.Direction;
                                 }
                             }
                         }
@@ -1034,10 +999,10 @@ namespace Pathfinder
 
                 if (horizontalSides.ContainsKey(y))
                 {
-                    foreach (int[] side in horizontalSides[y])
+                    foreach (Side side in horizontalSides[y])
                     {
-                        int min = abscissas.IndexOf(side[0]);
-                        int max = abscissas.IndexOf(side[1]);
+                        int min = abscissas.IndexOf(side.Cmin);
+                        int max = abscissas.IndexOf(side.Cmax);
 
                         for (int j = min; j < max; j++)
                         {
@@ -1061,18 +1026,14 @@ namespace Pathfinder
 
                     if (horizontalSides.ContainsKey(y))
                     {
-                        foreach (int[] side in horizontalSides[y])
+                        foreach (Side side in horizontalSides[y])
                         {
-                            int xMin = side[0];
-                            int xMax = side[1];
-
-                            if (x >= xMin && x <= xMax || x > xMin && x <= xMax)
+                            if (x >= side.Cmin && x <= side.Cmax || x > side.Cmin && x <= side.Cmax)
                             {
-                                int direction = side[2];
-                                if (direction != previousDirection)
+                                if (side.Direction != previousDirection)
                                 {
-                                    previousDirection = direction;
-                                    crossing += direction;
+                                    previousDirection = side.Direction;
+                                    crossing += side.Direction;
                                 }
                             }
                         }
@@ -1086,10 +1047,10 @@ namespace Pathfinder
 
                 if (verticalSides.ContainsKey(x))
                 {
-                    foreach (int[] side in verticalSides[x])
+                    foreach (Side side in verticalSides[x])
                     {
-                        int min = ordinates.IndexOf(side[0]);
-                        int max = ordinates.IndexOf(side[1]);
+                        int min = ordinates.IndexOf(side.Cmin);
+                        int max = ordinates.IndexOf(side.Cmax);
 
                         for (int j = min; j < max; j++)
                         {
@@ -1099,52 +1060,52 @@ namespace Pathfinder
                 }
             }
 
-            foreach (int[] corridor in horizontalCorridors)
+            foreach (Corridor corridor in horizontalCorridors)
             {
-                int yMin = ordinates.IndexOf(corridor[0]);
-                int yMax = ordinates.IndexOf(corridor[1]);
+                int ymin = ordinates.IndexOf(corridor.Ymin);
+                int ymax = ordinates.IndexOf(corridor.Ymax);
 
-                int xMin = abscissas.IndexOf(corridor[2]);
-                int xMax = abscissas.IndexOf(corridor[3]);
+                int xmin = abscissas.IndexOf(corridor.Xmin);
+                int xmax = abscissas.IndexOf(corridor.Xmax);
 
-                for (int i = yMin + 1; i < yMax; i++)
+                for (int i = ymin + 1; i < ymax; i++)
                 {
-                    for (int j = xMin; j < xMax; j++)
+                    for (int j = xmin; j < xmax; j++)
                     {
                         horizontalEdges[i, j] = 0;
                     }
                 }
 
-                for (int i = xMin + 1; i < xMax; i++)
+                for (int i = xmin + 1; i < xmax; i++)
                 {
-                    if (verticalEdges[i, yMin] == 1)
+                    if (verticalEdges[i, ymin] == 1)
                     {
-                        verticalEdges[i, yMin] = 2;
+                        verticalEdges[i, ymin] = 2;
                     }
                 }
             }
 
-            foreach (int[] corridor in verticalCorridors)
+            foreach (Corridor corridor in verticalCorridors)
             {
-                int xMin = abscissas.IndexOf(corridor[0]);
-                int xMax = abscissas.IndexOf(corridor[1]);
+                int xmin = abscissas.IndexOf(corridor.Xmin);
+                int xmax = abscissas.IndexOf(corridor.Xmax);
 
-                int yMin = ordinates.IndexOf(corridor[2]);
-                int yMax = ordinates.IndexOf(corridor[3]);
+                int ymin = ordinates.IndexOf(corridor.Ymin);
+                int ymax = ordinates.IndexOf(corridor.Ymax);
 
-                for (int i = xMin + 1; i < xMax; i++)
+                for (int i = xmin + 1; i < xmax; i++)
                 {
-                    for (int j = yMin; j < yMax; j++)
+                    for (int j = ymin; j < ymax; j++)
                     {
                         verticalEdges[i, j] = 0;
                     }
                 }
 
-                for (int i = yMin + 1; i < yMax; i++)
+                for (int i = ymin + 1; i < ymax; i++)
                 {
-                    if (horizontalEdges[i, xMin] == 1)
+                    if (horizontalEdges[i, xmin] == 1)
                     {
-                        horizontalEdges[i, xMin] = 2;
+                        horizontalEdges[i, xmin] = 2;
                     }
                 }
             }
@@ -1169,42 +1130,42 @@ namespace Pathfinder
                             continue;
                         }
 
-                        int yMin, yMax;
+                        int ymin, ymax;
                         if (y1 < y2)
                         {
-                            yMin = ordinates.IndexOf(y1);
-                            yMax = ordinates.IndexOf(y2);
+                            ymin = ordinates.IndexOf(y1);
+                            ymax = ordinates.IndexOf(y2);
                         }
                         else
                         {
-                            yMin = ordinates.IndexOf(y2);
-                            yMax = ordinates.IndexOf(y1);
+                            ymin = ordinates.IndexOf(y2);
+                            ymax = ordinates.IndexOf(y1);
                         }
 
                         int x = abscissas.IndexOf(x1);
 
-                        for (int k = yMin; k < yMax; k++)
+                        for (int k = ymin; k < ymax; k++)
                         {
                             verticalEdges[x, k] = 0;
                         }
                     }
                     else if (y1 == y2)
                     {
-                        int xMin, xMax;
+                        int xmin, xmax;
                         if (x1 < x2)
                         {
-                            xMin = abscissas.IndexOf(x1);
-                            xMax = abscissas.IndexOf(x2);
+                            xmin = abscissas.IndexOf(x1);
+                            xmax = abscissas.IndexOf(x2);
                         }
                         else
                         {
-                            xMin = abscissas.IndexOf(x2);
-                            xMax = abscissas.IndexOf(x1);
+                            xmin = abscissas.IndexOf(x2);
+                            xmax = abscissas.IndexOf(x1);
                         }
 
                         int y = ordinates.IndexOf(y1);
 
-                        for (int k = xMin; k < xMax; k++)
+                        for (int k = xmin; k < xmax; k++)
                         {
                             horizontalEdges[y, k] = 0;
                         }
@@ -1277,13 +1238,13 @@ namespace Pathfinder
                 }
             }
 
-            foreach (KeyValuePair<int, List<int[]>> pair in horizontalSides)
+            foreach (KeyValuePair<int, List<Side>> pair in horizontalSides)
             {
                 int j = ordinates.IndexOf(pair.Key);
-                foreach (int[] side in pair.Value)
+                foreach (Side side in pair.Value)
                 {
-                    int min = abscissas.IndexOf(side[0]);
-                    int max = abscissas.IndexOf(side[1]);
+                    int min = abscissas.IndexOf(side.Cmin);
+                    int max = abscissas.IndexOf(side.Cmax);
 
                     for (int i = min; i <= max; i++)
                     {
@@ -1292,13 +1253,13 @@ namespace Pathfinder
                 }
             }
 
-            foreach (KeyValuePair<int, List<int[]>> pair in verticalSides)
+            foreach (KeyValuePair<int, List<Side>> pair in verticalSides)
             {
                 int i = abscissas.IndexOf(pair.Key);
-                foreach (int[] side in pair.Value)
+                foreach (Side side in pair.Value)
                 {
-                    int min = ordinates.IndexOf(side[0]);
-                    int max = ordinates.IndexOf(side[1]);
+                    int min = ordinates.IndexOf(side.Cmin);
+                    int max = ordinates.IndexOf(side.Cmax);
 
                     for (int j = min; j <= max; j++)
                     {
@@ -1559,35 +1520,35 @@ namespace Pathfinder
         {
             Vertex p0 = polygon[0];
 
-            double xMin = p0.X;
-            double xMax = p0.X;
-            double yMin = p0.Y;
-            double yMax = p0.Y;
+            double xmin = p0.X;
+            double xmax = p0.X;
+            double ymin = p0.Y;
+            double ymax = p0.Y;
 
             for (int i = 1; i < polygon.Count; i++)
             {
                 Vertex p = polygon[i];
 
-                if (p.X < xMin)
+                if (p.X < xmin)
                 {
-                    xMin = p.X;
+                    xmin = p.X;
                 }
-                else if (p.X > xMax)
+                else if (p.X > xmax)
                 {
-                    xMax = p.X;
+                    xmax = p.X;
                 }
 
-                if (p.Y < yMin)
+                if (p.Y < ymin)
                 {
-                    yMin = p.Y;
+                    ymin = p.Y;
                 }
-                else if (p.Y > yMax)
+                else if (p.Y > ymax)
                 {
-                    yMax = p.Y;
+                    ymax = p.Y;
                 }
             }
 
-            if (point.X < xMin || point.X > xMax || point.Y < yMin || point.Y > yMax)
+            if (point.X < xmin || point.X > xmax || point.Y < ymin || point.Y > ymax)
             {
                 return false;
             }
@@ -1624,10 +1585,10 @@ namespace Pathfinder
         }
 
         private static List<List<Vertex>> SelectOutlines(List<List<Vertex>> outlines,
-                                                         int xMin,
-                                                         int yMin,
-                                                         int xMax,
-                                                         int yMax)
+                                                         int xmin,
+                                                         int ymin,
+                                                         int xmax,
+                                                         int ymax)
         {
             var selectedOutlines = new List<List<Vertex>>();
 
@@ -1641,11 +1602,11 @@ namespace Pathfinder
                     byte b;
 
                     double x = vertex.X;
-                    if (x < xMin)
+                    if (x < xmin)
                     {
                         b = 1;
                     }
-                    else if (x > xMax)
+                    else if (x > xmax)
                     {
                         b = 2;
                     }
@@ -1655,11 +1616,11 @@ namespace Pathfinder
                     }
 
                     double y = vertex.Y;
-                    if (y < yMin)
+                    if (y < ymin)
                     {
                         b |= 4;
                     }
-                    else if (y > yMax)
+                    else if (y > ymax)
                     {
                         b |= 8;
                     }

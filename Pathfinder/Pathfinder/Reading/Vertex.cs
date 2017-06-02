@@ -1,4 +1,4 @@
-﻿namespace Pathfinder
+﻿namespace Pathfinder.Reading
 {
     internal class Vertex
     {
