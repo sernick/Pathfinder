@@ -149,7 +149,7 @@ namespace Pathfinder
 
                 for (int j = i + 1; j < segments.Count; j++)
                 {
-                    var b = segments[j];
+                    Segment b = segments[j];
 
                     if (a.Level == b.Level)
                     {
@@ -200,7 +200,7 @@ namespace Pathfinder
                                 }
                                 else if (b.Max < a.Max)
                                 {
-                                    segments.Add(new Segment (a.Level, b.Max, a.Max));
+                                    segments.Add(new Segment(a.Level, b.Max, a.Max));
                                     b.Max = a.Min;
                                     a.Max = b.Max;
                                 }
@@ -525,74 +525,64 @@ namespace Pathfinder
             DivideSegments(horizontalSegments);
             DivideSegments(verticalSegments);
 
-            var verticals = new Dictionary<int, List<int[]>>();
-            foreach (int[] segment in verticalSegments)
+            var verticals = new Dictionary<int, List<Segment>>();
+            foreach (Segment segment in verticalSegments)
             {
-                int key = segment[0];
+                int key = segment.Level;
                 if (verticals.ContainsKey(key))
                 {
                     verticals[key].Add(segment);
                 }
                 else
                 {
-                    verticals[key] = new List<int[]> {segment};
+                    verticals[key] = new List<Segment> {segment};
                 }
             }
 
             for (int i = 0; i < horizontalSegments.Count; i++)
             {
-                int[] horizontal = horizontalSegments[i];
+                Segment horizontal = horizontalSegments[i];
 
-                int y = horizontal[0];
-                int xmin = horizontal[1];
-                int xmax = horizontal[2];
-
-                foreach (int x in new[] {xmin, xmax})
+                foreach (int x in new[] {horizontal.Min, horizontal.Max})
                 {
                     if (verticals.ContainsKey(x))
                     {
-                        List<int[]> segments = verticals[x];
+                        List<Segment> segments = verticals[x];
                         for (int j = 0; j < segments.Count; j++)
                         {
-                            int[] vertical = segments[j];
+                            Segment vertical = segments[j];
 
-                            int ymin = vertical[1];
-                            int ymax = vertical[2];
-
-                            if (y > ymin && y < ymax)
+                            if (horizontal.Level > vertical.Min && horizontal.Level < vertical.Max)
                             {
-                                segments.Add(new[] {x, y, ymax});
-                                vertical[2] = y;
+                                segments.Add(new Segment(x, horizontal.Level, vertical.Max));
+                                vertical.Max = horizontal.Level;
                             }
                         }
                     }
                 }
 
-                for (int x = xmin + 1; x < xmax; x++)
+                for (int x = horizontal.Min + 1; x < horizontal.Max; x++)
                 {
                     if (verticals.ContainsKey(x))
                     {
-                        List<int[]> segments = verticals[x];
+                        List<Segment> segments = verticals[x];
                         for (int j = 0; j < segments.Count; j++)
                         {
-                            int[] vertical = segments[j];
+                            Segment vertical = segments[j];
 
-                            int ymin = vertical[1];
-                            int ymax = vertical[2];
-
-                            if (y == ymin || y == ymax)
+                            if (horizontal.Level == vertical.Min || horizontal.Level == vertical.Max)
                             {
-                                horizontalSegments.Add(new[] {y, x, xmax});
-                                xmax = horizontal[2] = x;
+                                horizontalSegments.Add(new Segment(horizontal.Level, x, horizontal.Max));
+                                horizontal.Max = x;
                                 break;
                             }
-                            if (y > ymin && y < ymax)
+                            if (horizontal.Level > vertical.Min && horizontal.Level < vertical.Max)
                             {
-                                segments.Add(new[] {x, y, ymax});
-                                vertical[2] = y;
+                                segments.Add(new Segment(x, horizontal.Level, vertical.Max));
+                                vertical.Max = horizontal.Level;
 
-                                horizontalSegments.Add(new[] {y, x, xmax});
-                                xmax = horizontal[2] = x;
+                                horizontalSegments.Add(new Segment(horizontal.Level, x, horizontal.Max));
+                                horizontal.Max = x;
                                 break;
                             }
                         }
@@ -600,17 +590,17 @@ namespace Pathfinder
                 }
             }
 
-            var horizontals = new Dictionary<int, List<int[]>>();
-            foreach (int[] segment in horizontalSegments)
+            var horizontals = new Dictionary<int, List<Segment>>();
+            foreach (Segment segment in horizontalSegments)
             {
-                int key = segment[0];
+                int key = segment.Level;
                 if (horizontals.ContainsKey(key))
                 {
                     horizontals[key].Add(segment);
                 }
                 else
                 {
-                    horizontals[key] = new List<int[]> {segment};
+                    horizontals[key] = new List<Segment> {segment};
                 }
             }
 
@@ -625,8 +615,8 @@ namespace Pathfinder
 
             foreach (int y in horizontalKeys)
             {
-                List<int[]> segments = horizontals[y];
-                segments.Sort((a, b) => a[1].CompareTo(b[1]));
+                List<Segment> segments = horizontals[y];
+                segments.Sort((a, b) => a.Min.CompareTo(b.Min));
 
                 var xs = new Dictionary<int, Vertex>();
 
@@ -634,56 +624,50 @@ namespace Pathfinder
                 Vertex previousVertex;
                 Vertex[] previousRay;
                 {
-                    int[] segment = segments[0];
+                    Segment segment = segments[0];
 
-                    int min = segment[1];
-                    int max = segment[2];
+                    var minVertex = new Vertex(segment.Min, y);
+                    xs.Add(segment.Min, minVertex);
 
-                    var minVertex = new Vertex(min, y);
-                    xs.Add(min, minVertex);
-
-                    var maxVertex = new Vertex(max, y);
-                    xs.Add(max, maxVertex);
+                    var maxVertex = new Vertex(segment.Max, y);
+                    xs.Add(segment.Max, maxVertex);
 
                     rays[minVertex] = new[] {maxVertex, null, null, null};
 
                     var maxRay = new[] {null, null, minVertex, null};
                     rays[maxVertex] = maxRay;
 
-                    previous = max;
+                    previous = segment.Max;
                     previousVertex = maxVertex;
                     previousRay = maxRay;
                 }
 
                 for (int i = 1; i < segments.Count; i++)
                 {
-                    int[] segment = segments[i];
+                    Segment segment = segments[i];
 
-                    int min = segment[1];
-                    int max = segment[2];
-
-                    var maxVertex = new Vertex(max, y);
+                    var maxVertex = new Vertex(segment.Max, y);
 
                     Vertex minVertex;
-                    if (min == previous)
+                    if (segment.Min == previous)
                     {
                         minVertex = previousVertex;
                         previousRay[0] = maxVertex;
                     }
                     else
                     {
-                        minVertex = new Vertex(min, y);
-                        xs.Add(min, minVertex);
+                        minVertex = new Vertex(segment.Min, y);
+                        xs.Add(segment.Min, minVertex);
 
                         rays[minVertex] = new[] {maxVertex, null, null, null};
                     }
 
-                    xs.Add(max, maxVertex);
+                    xs.Add(segment.Max, maxVertex);
 
                     var maxRay = new[] {null, null, minVertex, null};
                     rays[maxVertex] = maxRay;
 
-                    previous = max;
+                    previous = segment.Max;
                     previousVertex = maxVertex;
                     previousRay = maxRay;
                 }
@@ -693,52 +677,49 @@ namespace Pathfinder
 
             foreach (int x in verticalKeys)
             {
-                List<int[]> segments = verticals[x];
-                segments.Sort((a, b) => a[1].CompareTo(b[1]));
+                List<Segment> segments = verticals[x];
+                segments.Sort((a, b) => a.Min.CompareTo(b.Min));
 
-                foreach (int[] segment in segments)
+                foreach (Segment segment in segments)
                 {
-                    int ymin = segment[1];
-                    int ymax = segment[2];
-
                     Vertex minVertex;
-                    if (vertices.ContainsKey(ymin))
+                    if (vertices.ContainsKey(segment.Min))
                     {
-                        Dictionary<int, Vertex> xs = vertices[ymin];
+                        Dictionary<int, Vertex> xs = vertices[segment.Min];
                         if (xs.ContainsKey(x))
                         {
-                            minVertex = vertices[ymin][x];
+                            minVertex = vertices[segment.Min][x];
                         }
                         else
                         {
-                            minVertex = new Vertex(x, ymin);
+                            minVertex = new Vertex(x, segment.Min);
                             xs[x] = minVertex;
                         }
                     }
                     else
                     {
-                        minVertex = new Vertex(x, ymin);
-                        vertices[ymin] = new Dictionary<int, Vertex> {{x, minVertex}};
+                        minVertex = new Vertex(x, segment.Min);
+                        vertices[segment.Min] = new Dictionary<int, Vertex> {{x, minVertex}};
                     }
 
                     Vertex maxVertex;
-                    if (vertices.ContainsKey(ymax))
+                    if (vertices.ContainsKey(segment.Max))
                     {
-                        Dictionary<int, Vertex> xs = vertices[ymax];
+                        Dictionary<int, Vertex> xs = vertices[segment.Max];
                         if (xs.ContainsKey(x))
                         {
-                            maxVertex = vertices[ymax][x];
+                            maxVertex = vertices[segment.Max][x];
                         }
                         else
                         {
-                            maxVertex = new Vertex(x, ymax);
+                            maxVertex = new Vertex(x, segment.Max);
                             xs[x] = maxVertex;
                         }
                     }
                     else
                     {
-                        maxVertex = new Vertex(x, ymax);
-                        vertices[ymax] = new Dictionary<int, Vertex> {{x, maxVertex}};
+                        maxVertex = new Vertex(x, segment.Max);
+                        vertices[segment.Max] = new Dictionary<int, Vertex> {{x, maxVertex}};
                     }
 
                     if (rays.ContainsKey(minVertex))
@@ -1110,9 +1091,9 @@ namespace Pathfinder
                 }
             }
 
-            foreach (Vertex[] vertices in gaps)
+            foreach (List<Vertex> vertices in gaps)
             {
-                int upper = vertices.Length - 1;
+                int upper = vertices.Count - 1;
                 for (int i = 0; i < upper; i++)
                 {
                     int j = i + 1;
