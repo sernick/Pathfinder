@@ -240,6 +240,7 @@ namespace Pathfinder
                                                               List<List<Vertex>> outlines,
                                                               List<int[]> horizontalCorridors,
                                                               List<int[]> verticalCorridors,
+                                                              List<Vertex[]> gaps,
                                                               out HashSet<int> xs,
                                                               out HashSet<int> ys)
         {
@@ -269,6 +270,15 @@ namespace Pathfinder
 
             xs = new HashSet<int>(new[] {start.X, end.X});
             ys = new HashSet<int>(new[] {start.Y, end.Y});
+
+            foreach (Vertex[] vertices in gaps)
+            {
+                foreach (Vertex vertex in vertices)
+                {
+                    xs.Add(vertex.X);
+                    ys.Add(vertex.Y);
+                }
+            }
 
             foreach (List<Vertex> outline in outlines)
             {
@@ -834,6 +844,7 @@ namespace Pathfinder
         public static List<Point> GetPath(List<double[]> areas,
                                           List<double[]> horizontalSections,
                                           List<double[]> verticalSections,
+                                          List<Point[]> shelfs,
                                           int offset,
                                           int intersectionWeight,
                                           int xStart,
@@ -869,6 +880,26 @@ namespace Pathfinder
                 outlines = CorrectOutlines(outlines, start, end);
             }
 
+            var gaps = new List<Vertex[]>();
+            foreach (Point[] points in shelfs)
+            {
+                if (points.Length < 0)
+                {
+                    continue;
+                }
+
+                var vetices = new Vertex[points.Length];
+                for (int i = 0; i < points.Length; i++)
+                {
+                    Point point = points[i];
+                    int x = (int) Math.Round(point.X);
+                    int y = (int) Math.Round(point.Y);
+
+                    vetices[i] = new Vertex(x, y);
+                }
+                gaps.Add(vetices);
+            }
+
             GetCorridors(horizontalSections,
                          verticalSections,
                          offset,
@@ -880,6 +911,7 @@ namespace Pathfinder
                                               outlines,
                                               horizontalCorridors,
                                               verticalCorridors,
+                                              gaps,
                                               out HashSet<int> xs,
                                               out HashSet<int> ys);
 
@@ -1113,6 +1145,69 @@ namespace Pathfinder
                     if (horizontalEdges[i, xMin] == 1)
                     {
                         horizontalEdges[i, xMin] = 2;
+                    }
+                }
+            }
+
+            foreach (Vertex[] vertices in gaps)
+            {
+                int upper = vertices.Length - 1;
+                for (int i = 0; i < upper; i++)
+                {
+                    int j = i + 1;
+
+                    int x1 = vertices[i].X;
+                    int y1 = vertices[i].Y;
+
+                    int x2 = vertices[j].X;
+                    int y2 = vertices[j].Y;
+
+                    if (x1 == x2)
+                    {
+                        if (y1 == y2)
+                        {
+                            continue;
+                        }
+
+                        int yMin, yMax;
+                        if (y1 < y2)
+                        {
+                            yMin = ordinates.IndexOf(y1);
+                            yMax = ordinates.IndexOf(y2);
+                        }
+                        else
+                        {
+                            yMin = ordinates.IndexOf(y2);
+                            yMax = ordinates.IndexOf(y1);
+                        }
+
+                        int x = abscissas.IndexOf(x1);
+
+                        for (int k = yMin; k < yMax; k++)
+                        {
+                            verticalEdges[x, k] = 0;
+                        }
+                    }
+                    else if (y1 == y2)
+                    {
+                        int xMin, xMax;
+                        if (x1 < x2)
+                        {
+                            xMin = abscissas.IndexOf(x1);
+                            xMax = abscissas.IndexOf(x2);
+                        }
+                        else
+                        {
+                            xMin = abscissas.IndexOf(x2);
+                            xMax = abscissas.IndexOf(x1);
+                        }
+
+                        int y = ordinates.IndexOf(y1);
+
+                        for (int k = xMin; k < xMax; k++)
+                        {
+                            horizontalEdges[y, k] = 0;
+                        }
                     }
                 }
             }
