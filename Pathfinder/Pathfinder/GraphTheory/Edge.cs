@@ -7,10 +7,10 @@ namespace Pathfinder.GraphTheory
     {
         #region Constructors
 
-        public Edge(Node first, Node second, int weight, Orientation orientation)
+        public Edge(Node node1, Node node2, int weight, Orientation orientation)
         {
-            First = first;
-            Second = second;
+            Node1 = node1;
+            Node2 = node2;
             Weight = weight;
             Orientation = orientation;
         }
@@ -19,17 +19,17 @@ namespace Pathfinder.GraphTheory
 
         #region Properties
 
-        public Node First
+        public Node Node1
+        {
+            get;
+        }
+
+        public Node Node2
         {
             get;
         }
 
         public Orientation Orientation
-        {
-            get;
-        }
-
-        public Node Second
         {
             get;
         }
@@ -45,18 +45,18 @@ namespace Pathfinder.GraphTheory
 
         public bool IsIncident(Node node)
         {
-            return node == First || node == Second;
+            return node == Node1 || node == Node2;
         }
 
         public Node OtherNode(Node node)
         {
-            if (First == node)
+            if (Node1 == node)
             {
-                return Second;
+                return Node2;
             }
-            if (Second == node)
+            if (Node2 == node)
             {
-                return First;
+                return Node1;
             }
             throw new ArgumentException();
         }

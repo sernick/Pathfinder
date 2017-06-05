@@ -47,7 +47,7 @@ namespace Pathfinder.Reading
 
         #region Methods
 
-        public static Corridor GetHorizontalCorridor(Section section, int offset)
+        public static Corridor CreateHorizontalCorridor(Section section, int offset)
         {
             int xmin = (int) Math.Floor(section.Cmin) - offset;
             int xmax = (int) Math.Ceiling(section.Cmax) + offset;
@@ -57,7 +57,7 @@ namespace Pathfinder.Reading
             return new Corridor(xmin, xmax, ymin, ymax);
         }
 
-        public static Corridor GetVerticalCorridor(Section section, int offset)
+        public static Corridor CreateVerticalCorridor(Section section, int offset)
         {
             int xmin = (int) Math.Floor(section.Level) - offset;
             int xmax = (int) Math.Ceiling(section.Level) + offset;

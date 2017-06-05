@@ -59,8 +59,12 @@ namespace Pathfinder.GraphTheory
                         Node nextNode = edge.OtherNode(toOpen);
                         if (!track.ContainsKey(nextNode) || track[nextNode].Price > currentPrice)
                         {
-                            track[nextNode] =
-                                new DijkstraData {Price = currentPrice, PreviousNode = toOpen, PreviousEdge = edge};
+                            track[nextNode] = new DijkstraData
+                                              {
+                                                  Price = currentPrice,
+                                                  PreviousNode = toOpen,
+                                                  PreviousEdge = edge
+                                              };
                         }
                     }
                 }

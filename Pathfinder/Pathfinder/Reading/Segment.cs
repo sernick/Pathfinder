@@ -1,6 +1,6 @@
 ﻿namespace Pathfinder.Reading
 {
-    internal struct Segment
+    internal class Segment
     {
         #region Constructors
 
@@ -15,10 +15,9 @@
 
         #region Properties
 
-        public int Min
+        public int Level
         {
             get;
-            set;
         }
 
         public int Max
@@ -27,9 +26,10 @@
             set;
         }
 
-        public int Level
+        public int Min
         {
             get;
+            set;
         }
 
         #endregion

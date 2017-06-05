@@ -1,6 +1,6 @@
 ﻿namespace Pathfinder.Reading
 {
-    internal class Vertex
+    public class Vertex
     {
         #region Constructors
 

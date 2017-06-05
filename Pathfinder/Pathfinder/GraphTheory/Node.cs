@@ -7,32 +7,25 @@ namespace Pathfinder.GraphTheory
     {
         #region Constructors
 
-        public Node(int x, int y)
+        public Node(int a, int o)
         {
-            X = x;
-            Y = y;
+            A = a;
+            O = o;
         }
-
-        #endregion
-
-        #region Fields
-
-        private readonly List<Edge> _incidentEdges = new List<Edge>();
 
         #endregion
 
         #region Properties
 
-        public IEnumerable<Edge> IncidentEdges
+        public int A
         {
-            get
-            {
-                foreach (Edge edge in _incidentEdges)
-                {
-                    yield return edge;
-                }
-            }
+            get;
         }
+
+        public List<Edge> IncidentEdges
+        {
+            get;
+        } = new List<Edge>();
 
 
         public IEnumerable<Node> IncidentNodes
@@ -46,12 +39,7 @@ namespace Pathfinder.GraphTheory
             }
         }
 
-        public int X
-        {
-            get;
-        }
-
-        public int Y
+        public int O
         {
             get;
         }
@@ -60,23 +48,9 @@ namespace Pathfinder.GraphTheory
 
         #region Methods
 
-        public static Edge Connect(Node first, Node second, int weight, Orientation orientation, Graph graph)
-        {
-            var edge = new Edge(first, second, weight, orientation);
-            first._incidentEdges.Add(edge);
-            second._incidentEdges.Add(edge);
-            return edge;
-        }
-
-        public static void Disconnect(Edge edge)
-        {
-            edge.First._incidentEdges.Remove(edge);
-            edge.Second._incidentEdges.Remove(edge);
-        }
-
         public override string ToString()
         {
-            return X + "," + Y;
+            return A + "," + O;
         }
 
         #endregion
