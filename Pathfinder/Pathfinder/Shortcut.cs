@@ -7,23 +7,11 @@ using Pathfinder.Analysis;
 using Pathfinder.GraphTheory;
 using Pathfinder.Reading;
 
-using Pointcad.E3Series.Wrapper;
-
 
 namespace Pathfinder
 {
     public class Shortcut
     {
-        #region Properties
-
-        public static EcubeGraph Graph
-        {
-            get;
-            set;
-        }
-
-        #endregion
-
         #region Methods
 
         private static void ClearIntermediateVertices(List<List<Vertex>> outlines)
@@ -898,22 +886,6 @@ namespace Pathfinder
                 else
                 {
                     endNode = null;
-                }
-            }
-
-            foreach (Edge edge in graph.Edges)
-            {
-                int x1 = xs[edge.Node1.A];
-                int y1 = ys[edge.Node1.O];
-
-                int x2 = xs[edge.Node2.A];
-                int y2 = ys[edge.Node2.O];
-
-                int graphId = Graph.CreateLine(new Point(x1, y1), new Point(x2, y2));
-                if (graphId > 0)
-                {
-                    Graph.SetLineWidth(0);
-                    Graph.SetLineColour(13);
                 }
             }
 

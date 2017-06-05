@@ -58,11 +58,5 @@
     <Compile Include="Reading\Side.cs" />
     <Compile Include="Reading\Vertex.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="E:\Sources\Ivanov\E3Series.Wrapper\E3Series.Wrapper\E3Series.Wrapper.csproj">
-      <Project>{06f9908b-bfdc-4392-adbb-57063813c290}</Project>
-      <Name>E3Series.Wrapper</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
