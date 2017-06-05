@@ -93,9 +93,7 @@ namespace Pathfinder
                                                     Vertex end,
                                                     List<List<Vertex>> outlines,
                                                     List<Corridor> horizontalCorridors,
-                                                    List<Corridor> verticalCorridors,
-                                                    List<Segment> horizontalGaps,
-                                                    List<Segment> verticalGaps)
+                                                    List<Corridor> verticalCorridors)
         {
             int xmin, xmax;
             if (start.X < end.X)
@@ -277,124 +275,6 @@ namespace Pathfinder
                     i--;
                 }
             }
-
-            for (int i = 0; i < horizontalGaps.Count; i++)
-            {
-                Segment gap = horizontalGaps[i];
-
-                if (gap.Level >= ymin && gap.Level <= ymax)
-                {
-                    byte b1;
-                    if (gap.Min < xmin)
-                    {
-                        b1 = 1;
-                    }
-                    else if (gap.Min > xmax)
-                    {
-                        b1 = 2;
-                    }
-                    else
-                    {
-                        b1 = 0;
-                    }
-
-                    byte b2;
-                    if (gap.Max < xmin)
-                    {
-                        b2 = 1;
-                    }
-                    else if (gap.Max > xmax)
-                    {
-                        b2 = 2;
-                    }
-                    else
-                    {
-                        b2 = 0;
-                    }
-
-                    if ((b1 & b2) == 0)
-                    {
-                        if (b1 == 1)
-                        {
-                            gap.Min = xmin;
-                        }
-
-                        if (b2 == 2)
-                        {
-                            gap.Max = xmax;
-                        }
-                    }
-                    else
-                    {
-                        horizontalGaps.RemoveAt(i);
-                        i--;
-                    }
-                }
-                else
-                {
-                    horizontalGaps.RemoveAt(i);
-                    i--;
-                }
-            }
-
-            for (int i = 0; i < verticalGaps.Count; i++)
-            {
-                Segment gap = verticalGaps[i];
-
-                if (gap.Level >= xmin && gap.Level <= xmax)
-                {
-                    byte b1;
-                    if (gap.Min < ymin)
-                    {
-                        b1 = 1;
-                    }
-                    else if (gap.Min > ymax)
-                    {
-                        b1 = 2;
-                    }
-                    else
-                    {
-                        b1 = 0;
-                    }
-
-                    byte b2;
-                    if (gap.Max < ymin)
-                    {
-                        b2 = 1;
-                    }
-                    else if (gap.Max > ymax)
-                    {
-                        b2 = 2;
-                    }
-                    else
-                    {
-                        b2 = 0;
-                    }
-
-                    if ((b1 & b2) == 0)
-                    {
-                        if (b1 == 1)
-                        {
-                            gap.Min = ymin;
-                        }
-
-                        if (b2 == 2)
-                        {
-                            gap.Max = ymax;
-                        }
-                    }
-                    else
-                    {
-                        verticalGaps.RemoveAt(i);
-                        i--;
-                    }
-                }
-                else
-                {
-                    verticalGaps.RemoveAt(i);
-                    i--;
-                }
-            }
         }
 
         private static List<List<Vertex>> CorrectOutlines(List<List<Vertex>> outlines, Vertex start, Vertex end)
@@ -553,73 +433,15 @@ namespace Pathfinder
         private static void DoubleToInt(List<Area> areas,
                                         List<Section> horizontalSections,
                                         List<Section> verticalSections,
-                                        List<List<Vertex>> shelfs,
                                         int offset,
                                         out List<Rectangle> rectangles,
                                         out List<Corridor> horizontalCorridors,
-                                        out List<Corridor> verticalCorridors,
-                                        out List<Segment> horizontalGaps,
-                                        out List<Segment> verticalGaps)
+                                        out List<Corridor> verticalCorridors)
         {
             rectangles = new List<Rectangle>(areas.Count);
             foreach (Area area in areas)
             {
                 rectangles.Add(new Rectangle(area, offset));
-            }
-
-            horizontalGaps = new List<Segment>();
-            verticalGaps = new List<Segment>();
-
-            foreach (List<Vertex> vertices in shelfs)
-            {
-                int upper = vertices.Count - 1;
-                for (int i = 0; i < upper; i++)
-                {
-                    int j = (i + 1)%vertices.Count;
-
-                    Vertex v1 = vertices[i];
-                    Vertex v2 = vertices[j];
-
-                    bool a = v1.X == v2.X;
-                    bool o = v1.Y == v2.Y;
-
-                    if (a & o)
-                    {
-                        continue;
-                    }
-                    if (o)
-                    {
-                        int min, max;
-                        if (v1.X < v2.X)
-                        {
-                            min = v1.X;
-                            max = v2.X;
-                        }
-                        else
-                        {
-                            min = v2.X;
-                            max = v1.X;
-                        }
-
-                        horizontalGaps.Add(new Segment(v1.Y, min, max));
-                    }
-                    else if (a)
-                    {
-                        int min, max;
-                        if (v1.Y < v2.Y)
-                        {
-                            min = v1.Y;
-                            max = v2.Y;
-                        }
-                        else
-                        {
-                            min = v2.Y;
-                            max = v1.Y;
-                        }
-
-                        verticalGaps.Add(new Segment(v1.X, min, max));
-                    }
-                }
             }
 
             horizontalCorridors = new List<Corridor>(horizontalSections.Count);
@@ -640,8 +462,6 @@ namespace Pathfinder
                                            List<List<Vertex>> outlines,
                                            List<Corridor> horizontalCorridors,
                                            List<Corridor> verticalCorridors,
-                                           List<Segment> horizontalGaps,
-                                           List<Segment> verticalGaps,
                                            out HashSet<int> xs,
                                            out HashSet<int> ys)
         {
@@ -671,20 +491,6 @@ namespace Pathfinder
                 xs.Add(corridor.Xmax);
                 ys.Add(corridor.Ymin);
                 ys.Add(corridor.Ymax);
-            }
-
-            foreach (Segment gap in horizontalGaps)
-            {
-                xs.Add(gap.Min);
-                xs.Add(gap.Max);
-                ys.Add(gap.Level);
-            }
-
-            foreach (Segment gap in verticalGaps)
-            {
-                ys.Add(gap.Level);
-                ys.Add(gap.Min);
-                ys.Add(gap.Max);
             }
         }
 
@@ -1008,7 +814,6 @@ namespace Pathfinder
         public static List<Point> GetPath(List<Area> areas,
                                           List<Section> horizontalSections,
                                           List<Section> verticalSections,
-                                          List<List<Vertex>> shelfs,
                                           int offset,
                                           int intersectionWeight,
                                           Vertex start,
@@ -1022,13 +827,10 @@ namespace Pathfinder
             DoubleToInt(areas,
                         horizontalSections,
                         verticalSections,
-                        shelfs,
                         offset,
                         out List<Rectangle> rectangles,
                         out List<Corridor> horizontalCorridors,
-                        out List<Corridor> verticalCorridors,
-                        out List<Segment> horizontalGaps,
-                        out List<Segment> verticalGaps);
+                        out List<Corridor> verticalCorridors);
 
             List<List<Vertex>> outlines = GetOutlines(rectangles);
 
@@ -1038,17 +840,13 @@ namespace Pathfinder
                                     end,
                                     outlines,
                                     horizontalCorridors,
-                                    verticalCorridors,
-                                    horizontalGaps,
-                                    verticalGaps);
+                                    verticalCorridors);
 
             GetCoordinates(start,
                            end,
                            outlines,
                            horizontalCorridors,
                            verticalCorridors,
-                           horizontalGaps,
-                           verticalGaps,
                            out HashSet<int> unsortedXs,
                            out HashSet<int> unsortedYs);
 
@@ -1069,8 +867,6 @@ namespace Pathfinder
                                   verticalSides,
                                   horizontalCorridors,
                                   verticalCorridors,
-                                  horizontalGaps,
-                                  verticalGaps,
                                   xs,
                                   ys,
                                   intersectionWeight);

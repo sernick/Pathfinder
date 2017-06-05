@@ -15,8 +15,6 @@ namespace Pathfinder.GraphTheory
                      Dictionary<int, List<Side>> verticalSides,
                      List<Corridor> horizontalCorridors,
                      List<Corridor> verticalCorridors,
-                     List<Segment> horizontalGaps,
-                     List<Segment> verticalGaps,
                      List<int> xs,
                      List<int> ys,
                      int intersectionWeight)
@@ -188,32 +186,6 @@ namespace Pathfinder.GraphTheory
                     }
                 }
             }
-
-            //foreach (Segment gap in horizontalGaps)
-            //{
-            //    int o = ordinateRedirects[gap.Level];
-
-            //    int amin = abscissaRedirects[gap.Min];
-            //    int amax = abscissaRedirects[gap.Max];
-
-            //    for (int a = amin; a < amax; a++)
-            //    {
-            //        RemoveHorizontalEdge(o, a);
-            //    }
-            //}
-
-            //foreach (Segment gap in verticalGaps)
-            //{
-            //    int a = abscissaRedirects[gap.Level];
-
-            //    int omin = ordinateRedirects[gap.Min];
-            //    int omax = ordinateRedirects[gap.Max];
-
-            //    for (int o = omin; o < omax; o++)
-            //    {
-            //        RemoveVerticalEdge(a, o);
-            //    }
-            //}
 
             for (int a = 0; a < abscissaCount; a++)
             {
