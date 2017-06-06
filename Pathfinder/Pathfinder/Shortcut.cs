@@ -805,7 +805,8 @@ namespace Pathfinder
                                           int offset,
                                           int intersectionWeight,
                                           Vertex start,
-                                          Vertex end)
+                                          Vertex end,
+                                          int orientation)
         {
             if (start.X == end.X && start.Y == end.Y || offset <= 0)
             {
@@ -857,7 +858,8 @@ namespace Pathfinder
                                   verticalCorridors,
                                   xs,
                                   ys,
-                                  intersectionWeight);
+                                  intersectionWeight,
+                                  orientation);
 
             Node startNode;
             {

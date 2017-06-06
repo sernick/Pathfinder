@@ -17,7 +17,8 @@ namespace Pathfinder.GraphTheory
                      List<Corridor> verticalCorridors,
                      List<int> xs,
                      List<int> ys,
-                     int intersectionWeight)
+                     int intersectionWeight,
+                     int orientation)
         {
             int abscissaCount = xs.Count;
             int abscissaUpper = abscissaCount - 1;
@@ -207,75 +208,80 @@ namespace Pathfinder.GraphTheory
                 Node currentNode = this[a, o];
                 if (currentNode.IncidentEdges.Count <= 0)
                 {
+                    if (orientation == 0)
                     {
-                        int i = a - 1;
-                        while (i >= 0)
                         {
-                            Node previousNode = Grid[i, o];
-                            if (previousNode != null)
+                            int i = a - 1;
+                            while (i >= 0)
                             {
-                                var edge = new Edge(currentNode, previousNode, 0, Orientation.Horizontal);
+                                Node previousNode = Grid[i, o];
+                                if (previousNode != null)
+                                {
+                                    var edge = new Edge(currentNode, previousNode, 0, Orientation.Horizontal);
 
-                                currentNode.IncidentEdges.Add(edge);
-                                previousNode.IncidentEdges.Add(edge);
+                                    currentNode.IncidentEdges.Add(edge);
+                                    previousNode.IncidentEdges.Add(edge);
 
-                                break;
+                                    break;
+                                }
+                                i--;
                             }
-                            i--;
+                        }
+
+                        {
+                            int i = a + 1;
+                            while (i < abscissaCount)
+                            {
+                                Node nextNode = Grid[i, o];
+                                if (nextNode != null)
+                                {
+                                    var edge = new Edge(currentNode, nextNode, 0, Orientation.Horizontal);
+
+                                    currentNode.IncidentEdges.Add(edge);
+                                    nextNode.IncidentEdges.Add(edge);
+
+                                    break;
+                                }
+                                i++;
+                            }
                         }
                     }
-
+                    else if (orientation == 1)
                     {
-                        int i = a + 1;
-                        while (i < abscissaCount)
                         {
-                            Node nextNode = Grid[i, o];
-                            if (nextNode != null)
+                            int j = o - 1;
+                            while (j >= 0)
                             {
-                                var edge = new Edge(currentNode, nextNode, 0, Orientation.Horizontal);
+                                Node previousNode = Grid[a, j];
+                                if (previousNode != null)
+                                {
+                                    var edge = new Edge(currentNode, previousNode, 0, Orientation.Horizontal);
 
-                                currentNode.IncidentEdges.Add(edge);
-                                nextNode.IncidentEdges.Add(edge);
+                                    currentNode.IncidentEdges.Add(edge);
+                                    previousNode.IncidentEdges.Add(edge);
 
-                                break;
+                                    break;
+                                }
+                                j--;
                             }
-                            i++;
                         }
-                    }
 
-                    {
-                        int j = o - 1;
-                        while (j >= 0)
                         {
-                            Node previousNode = Grid[a, j];
-                            if (previousNode != null)
+                            int j = o + 1;
+                            while (j < ordinateCount)
                             {
-                                var edge = new Edge(currentNode, previousNode, 0, Orientation.Horizontal);
+                                Node nextNode = Grid[a, j];
+                                if (nextNode != null)
+                                {
+                                    var edge = new Edge(currentNode, nextNode, 0, Orientation.Horizontal);
 
-                                currentNode.IncidentEdges.Add(edge);
-                                previousNode.IncidentEdges.Add(edge);
+                                    currentNode.IncidentEdges.Add(edge);
+                                    nextNode.IncidentEdges.Add(edge);
 
-                                break;
+                                    break;
+                                }
+                                j++;
                             }
-                            j--;
-                        }
-                    }
-
-                    {
-                        int j = o + 1;
-                        while (j < ordinateCount)
-                        {
-                            Node nextNode = Grid[a, j];
-                            if (nextNode != null)
-                            {
-                                var edge = new Edge(currentNode, nextNode, 0, Orientation.Horizontal);
-
-                                currentNode.IncidentEdges.Add(edge);
-                                nextNode.IncidentEdges.Add(edge);
-
-                                break;
-                            }
-                            j++;
                         }
                     }
                 }
