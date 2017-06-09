@@ -469,6 +469,7 @@ namespace Pathfinder
             {
                 xs.Add(corridor.Xmin);
                 xs.Add(corridor.Xmax);
+
                 ys.Add(corridor.Ymin);
                 ys.Add(corridor.Ymax);
             }
@@ -477,6 +478,7 @@ namespace Pathfinder
             {
                 xs.Add(corridor.Xmin);
                 xs.Add(corridor.Xmax);
+
                 ys.Add(corridor.Ymin);
                 ys.Add(corridor.Ymax);
             }
@@ -491,6 +493,7 @@ namespace Pathfinder
             {
                 int x1 = rectangle.Xmin;
                 int y1 = rectangle.Ymin;
+
                 int x2 = rectangle.Xmax;
                 int y2 = rectangle.Ymax;
 
@@ -1013,6 +1016,7 @@ namespace Pathfinder
 
             double xmin = p0.X;
             double xmax = p0.X;
+
             double ymin = p0.Y;
             double ymax = p0.Y;
 
