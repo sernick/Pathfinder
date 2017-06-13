@@ -842,7 +842,6 @@ namespace Pathfinder
                            out HashSet<int> unsortedXs,
                            out HashSet<int> unsortedYs);
 
-
             List<int> xs = unsortedXs.ToList();
             xs.Sort();
 
@@ -1051,9 +1050,8 @@ namespace Pathfinder
             bool inside = false;
             for (int i = 0, j = polygon.Count - 1; i < polygon.Count; j = i++)
             {
-                if (polygon[i].Y > point.Y != polygon[j].Y > point.Y &&
-                    point.X < (polygon[j].X - polygon[i].X)*(point.Y - polygon[i].Y)/(polygon[j].Y - polygon[i].Y) +
-                    polygon[i].X)
+                if (polygon[i].Y > point.Y != polygon[j].Y > point.Y && point.X < (polygon[j].X - polygon[i].X)*
+                    (point.Y - polygon[i].Y)/(polygon[j].Y - polygon[i].Y) + polygon[i].X)
                 {
                     inside = !inside;
                 }

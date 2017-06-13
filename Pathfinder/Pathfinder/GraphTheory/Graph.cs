@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 using Pathfinder.Reading;
 
@@ -206,6 +207,37 @@ namespace Pathfinder.GraphTheory
                 int o = ordinateRedirects[vertex.Y];
 
                 Node currentNode = this[a, o];
+                if (orientation == 0)
+                {
+                    for (int i = 0; i < currentNode.IncidentEdges.Count; i++)
+                    {
+                        Edge edge = currentNode.IncidentEdges[i];
+                        if (edge.Orientation == Orientation.Vertical)
+                        {
+                            Node node1 = edge.Node1;
+                            Node node2 = edge.Node2;
+
+                            RemoveVerticalEdge(Math.Min(node1.A, node2.A), Math.Min(node1.O, node2.O));
+                            i--;
+                        }
+                    }
+                }
+                else if (orientation == 1)
+                {
+                    for (int i = 0; i < currentNode.IncidentEdges.Count; i++)
+                    {
+                        Edge edge = currentNode.IncidentEdges[i];
+                        if (edge.Orientation == Orientation.Horizontal)
+                        {
+                            Node node1 = edge.Node1;
+                            Node node2 = edge.Node2;
+
+                            RemoveHorizontalEdge(Math.Min(node1.O, node2.O), Math.Min(node1.A, node2.A));
+                            i--;
+                        }
+                    }
+                }
+
                 if (currentNode.IncidentEdges.Count <= 0)
                 {
                     if (orientation == 0)
@@ -514,6 +546,11 @@ namespace Pathfinder.GraphTheory
 
         private void AddHorizontalEdge(int o, int a)
         {
+            if (HorizontalEdges[o, a] != null)
+            {
+                return;
+            }
+
             Node node1 = this[a, o];
             Node node2 = this[a + 1, o];
 
@@ -529,6 +566,11 @@ namespace Pathfinder.GraphTheory
 
         private void AddVerticalEdge(int a, int o)
         {
+            if (VerticalEdges[a, o] != null)
+            {
+                return;
+            }
+
             Node node1 = this[a, o];
             Node node2 = this[a, o + 1];
 
